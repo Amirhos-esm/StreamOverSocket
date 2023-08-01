@@ -1,0 +1,18 @@
+cmake_minimum_required(VERSION 3.25)
+project(serialPort C)
+
+set(CMAKE_C_STANDARD 11)
+set(ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+
+include_directories(${ROOT_DIR})
+include_directories(${ROOT_DIR}/Stream)
+include_directories(${ROOT_DIR}/Str)
+include_directories(${ROOT_DIR}/at_parser)
+include_directories(${ROOT_DIR}/arduino)
+#target_include_directories(${PROJECT_NAME} PRIVATE ${ROOT_DIR} ${ROOT_DIR}/Stream ${ROOT_DIR}/Str)
+
+add_executable(serialPort main.c uart_sock.c userCodes.c arduino/arduino.h)
+
+if (WIN32)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ws2_32)
+endif ()

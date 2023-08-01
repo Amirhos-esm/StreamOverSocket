@@ -1,0 +1,14 @@
+#ifndef SERIALPORT_EC200_CFG_H
+#define SERIALPORT_EC200_CFG_H
+
+#define INCLUDE_NET 1
+
+
+
+
+
+#if INCLUDE_NET
+    #define MAX_SOCKET 3
+#endif
+
+#endif //SERIALPORT_EC200_CFG_H
