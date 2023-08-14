@@ -17,7 +17,8 @@ set(SOURCES
         Stream/InputStream.c
         arduino/arduino.c
         ec200/ec200.c
-        ec200/ec200_net.c)
+        ec200/ec200_sock.c
+        )
 
 #target_include_directories(${PROJECT_NAME} PRIVATE ${ROOT_DIR} ${ROOT_DIR}/Stream ${ROOT_DIR}/Str)
 include_directories(parser Str Stream arduino ec200)

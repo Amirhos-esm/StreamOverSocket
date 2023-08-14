@@ -140,8 +140,8 @@ build CMakeFiles/serialPort.dir/ec200/ec200.c.obj: C_COMPILER__serialPort_Debug 
   OBJECT_DIR = CMakeFiles\serialPort.dir
   OBJECT_FILE_DIR = CMakeFiles\serialPort.dir\ec200
 
-build CMakeFiles/serialPort.dir/ec200/ec200_net.c.obj: C_COMPILER__serialPort_Debug C$:/Users/Administrator/CLionProjects/serialPort/ec200/ec200_net.c || cmake_object_order_depends_target_serialPort
-  DEP_FILE = CMakeFiles\serialPort.dir\ec200\ec200_net.c.obj.d
+build CMakeFiles/serialPort.dir/ec200/ec200_sock.c.obj: C_COMPILER__serialPort_Debug C$:/Users/Administrator/CLionProjects/serialPort/ec200/ec200_sock.c || cmake_object_order_depends_target_serialPort
+  DEP_FILE = CMakeFiles\serialPort.dir\ec200\ec200_sock.c.obj.d
   FLAGS = -g -fdiagnostics-color=always -std=gnu11
   INCLUDES = -IC:/Users/Administrator/CLionProjects/serialPort/parser -IC:/Users/Administrator/CLionProjects/serialPort/Str -IC:/Users/Administrator/CLionProjects/serialPort/Stream -IC:/Users/Administrator/CLionProjects/serialPort/arduino -IC:/Users/Administrator/CLionProjects/serialPort/ec200
   OBJECT_DIR = CMakeFiles\serialPort.dir
@@ -155,7 +155,7 @@ build CMakeFiles/serialPort.dir/ec200/ec200_net.c.obj: C_COMPILER__serialPort_De
 #############################################
 # Link the executable serialPort.exe
 
-build serialPort.exe: C_EXECUTABLE_LINKER__serialPort_Debug CMakeFiles/serialPort.dir/main.c.obj CMakeFiles/serialPort.dir/uart_sock.c.obj CMakeFiles/serialPort.dir/userCodes.c.obj CMakeFiles/serialPort.dir/at_parser/parser.c.obj CMakeFiles/serialPort.dir/at_parser/parser_urc.c.obj CMakeFiles/serialPort.dir/Str/Str.c.obj CMakeFiles/serialPort.dir/Stream/StreamBuffer.c.obj CMakeFiles/serialPort.dir/Stream/UARTStream.c.obj CMakeFiles/serialPort.dir/Stream/buffer.c.obj CMakeFiles/serialPort.dir/Stream/OutputStream.c.obj CMakeFiles/serialPort.dir/Stream/InputStream.c.obj CMakeFiles/serialPort.dir/arduino/arduino.c.obj CMakeFiles/serialPort.dir/ec200/ec200.c.obj CMakeFiles/serialPort.dir/ec200/ec200_net.c.obj
+build serialPort.exe: C_EXECUTABLE_LINKER__serialPort_Debug CMakeFiles/serialPort.dir/main.c.obj CMakeFiles/serialPort.dir/uart_sock.c.obj CMakeFiles/serialPort.dir/userCodes.c.obj CMakeFiles/serialPort.dir/at_parser/parser.c.obj CMakeFiles/serialPort.dir/at_parser/parser_urc.c.obj CMakeFiles/serialPort.dir/Str/Str.c.obj CMakeFiles/serialPort.dir/Stream/StreamBuffer.c.obj CMakeFiles/serialPort.dir/Stream/UARTStream.c.obj CMakeFiles/serialPort.dir/Stream/buffer.c.obj CMakeFiles/serialPort.dir/Stream/OutputStream.c.obj CMakeFiles/serialPort.dir/Stream/InputStream.c.obj CMakeFiles/serialPort.dir/arduino/arduino.c.obj CMakeFiles/serialPort.dir/ec200/ec200.c.obj CMakeFiles/serialPort.dir/ec200/ec200_sock.c.obj
   FLAGS = -g
   LINK_LIBRARIES = -lws2_32  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   OBJECT_DIR = CMakeFiles\serialPort.dir

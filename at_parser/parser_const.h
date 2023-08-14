@@ -9,7 +9,7 @@ extern "C"{
 #define Q_RES_SEND "> "
 #define CRLF "\r\n"
 #define AT "AT"
-#define Q_RES_QIURC_RECV "+QIURC: \"recv\",0,"
+#define Q_RES_QIURC_RECV "+QIURC: \"recv\","
 #define Q_RES_CMT "+CMT:"
 
 

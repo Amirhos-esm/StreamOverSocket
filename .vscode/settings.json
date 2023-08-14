@@ -1,11 +1,6 @@
 {
     "files.associations": {
-        "general.h": "c",
-        "windows.h": "c",
-        "ec200.h": "c",
-        "uartstream.h": "c",
-        "ec200_net.h": "c",
-        "parser.h": "c"
-    },
-    "C_Cpp.errorSquiggles": "disabled"
+        "parser.h": "c",
+        "ec200_dbg.h": "c"
+    }
 }

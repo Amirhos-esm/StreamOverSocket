@@ -14,7 +14,7 @@ extern "C"{
 
 
 #if INCLUDE_NET
-    #include "ec200_net.h"
+    #include "ec200_sock.h"
 #endif
 
 

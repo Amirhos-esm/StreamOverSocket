@@ -5,7 +5,7 @@ extern "C"{
 #endif
 #include "Str.h"
 
-#define __URC_INIT(X) { .Response = {.Text = "+" #X ":", .Len = sizeof( "+" #X ":") - 1}, .cb = Q_Callback_##X }
+#define __URC_INIT(X,Y) { .Response = {.Text = Y, .Len = sizeof(Y) - 1}, .cb = Q_Callback_##X }
 
 
 struct __URC;
@@ -43,19 +43,21 @@ void Q_Callback_CPIN_READY(const URC* urc, Str* input);
 //void Q_Callback_QIND_CSQ(const URC* urc, Str* input);
 //void Q_Callback_QIND_PB_DONE(const URC* urc, Str* input);
 //void Q_Callback_QIND_SMS_DONE(const URC* urc, Str* input);
-//void Q_Callback_QIOPEN_1(const URC* urc, Str* input);
-//void Q_Callback_QIURC_CLOSED(const URC* urc, Str* input);
-//void Q_Callback_QIURC_PDPDEACT(const URC* urc, Str* input);
-//void Q_Callback_QIURC_RECV(const URC* urc, Str* input);
+
+void Q_Callback_QIOPEN(const URC* urc, Str* input);
+void Q_Callback_QIURC_CLOSED(const URC* urc, Str* input);
+void Q_Callback_QIURC_PDPDEACT(const URC* urc, Str* input);
+void Q_Callback_QIURC_RECV(const URC* urc, Str* input);
+
 
 
 static const URC Q_URC[] = {
-    __URC_INIT(CLIP),
-    __URC_INIT(CMT),
-    __URC_INIT(COPS),
-    __URC_INIT(CPIN_NOT_INSERTED),
-    __URC_INIT(CPIN_NOT_READY),
-    __URC_INIT(CPIN_READY),
+    __URC_INIT(CLIP,"+CLIP:"),
+    __URC_INIT(CMT,"+CMT:"),
+    __URC_INIT(COPS,"+COPS:"),
+    __URC_INIT(CPIN_NOT_INSERTED,"+CPIN: NOT INSERTED"),
+    __URC_INIT(CPIN_NOT_READY,"+CPIN: NOT READY"),
+    __URC_INIT(CPIN_READY,"+CPIN: READY"),
     // __URC_INIT(CUSD),
     // __URC_INIT(HTTP_POST_FILE),
     // __URC_INIT(QIND_ACT_CDMA),
@@ -74,10 +76,11 @@ static const URC Q_URC[] = {
     // __URC_INIT(QIND_CSQ_99_99),
     // __URC_INIT(QIND_PB_DONE),
     // __URC_INIT(QIND_SMS_DONE),
-    // __URC_INIT(QIOPEN_1),
-    // __URC_INIT(QIURC_CLOSED),
-    // __URC_INIT(QIURC_PDPDEACT),
-    // __URC_INIT(QIURC_RECV),
+
+    __URC_INIT(QIOPEN,"+QIOPEN:"),
+    __URC_INIT(QIURC_CLOSED,"+QIURC: \"closed\""),
+    __URC_INIT(QIURC_PDPDEACT,"+QIURC: \"pdpdeact\""),
+    __URC_INIT(QIURC_RECV,"+QIURC: \"recv\""),
 };
 static const uint16_t Q_URC_LEN = sizeof(Q_URC) / sizeof(Q_URC[0]);
 

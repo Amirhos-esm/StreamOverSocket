@@ -1,4 +1,6 @@
 #include "parser.h"
+#include "parser_dbg.h"
+
 void Q_Callback_CLIP(const URC* urc, Str* input){
 
 }
@@ -6,7 +8,7 @@ void Q_Callback_CMT(const URC* urc, Str* input){
    
 }
 void Q_Callback_COPS(const URC* urc, Str* input){
- printf("urc find! ");
+    _print("urc find!");
 }
 
 void Q_Callback_CPIN_NOT_INSERTED(const URC* urc, Str* input){

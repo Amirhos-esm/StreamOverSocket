@@ -12,6 +12,9 @@ extern "C"{
 #include "Str.h"
 #include "parser_urc.h"
 
+#define IGNORE_DATA_ECHO 0
+#define PARSER_DEBUG_ENABLE 1
+
 typedef enum {
   Parser_TxState_None,
   Parser_TxState_Sendو
@@ -30,15 +33,18 @@ typedef enum{
     Parser_timeout = 255 ,
 }Parser_CommandStatus;
 
+
 typedef void (*cb_onCommandFinish)(void * args);
 
 void parser_init(UARTStream* stream);
 void parser_handle();
 void parser_setOnCommandFinish(cb_onCommandFinish cb,void* args);
 bool parser_sendCommand(const char* cmd,uint32_t timeout);
+bool parser_sendCommand_f(uint32_t timeout,const char* format,...);
 bool parser_sendCommand_dataMode(const char* cmd,const char* data,uint32_t timeout);
+bool parser_sendCommand_dataMode_f(const char *data, uint32_t timeout,const char *format,...);
 bool parser_isBusy();
-bool parser_isOnCommand();
+// bool parser_isBusy_real();
 int parser_getRetCode();
 bool parser_scanf(const char* format, ...);
 uint8_t* parser_getComuBuffer();

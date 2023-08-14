@@ -1,12 +1,7 @@
 #include "parser.h"
 #include <stdarg.h>
+#include "parser_dbg.h"
 
-static uint8_t tokenizerBuffer[512];
-static uint8_t comulativeBuffer[512];
-
-static const char *TERMINATION_LIST[] = {
-    "OK", "ERROR", "SEND OK", "+CME ERROR:", "+CMS ERROR:"};
-static const int TERMINATION_LIST_SIZE = sizeof(TERMINATION_LIST) / sizeof(char *);
 
 typedef struct
 {
@@ -31,13 +26,23 @@ typedef struct
     void *args;
     uint16_t Ignorebytes;
 } Parser_Obj;
-Parser_Obj obj;
+ Parser_Obj obj;
 
-static ATResponse response = {
+static uint8_t tokenizerBuffer[512];
+static uint8_t comulativeBuffer[512];
+
+
+static const char *TERMINATION_LIST[] = {
+    "OK", "ERROR", "SEND OK", "+CME ERROR:", "+CMS ERROR:"};
+static const int TERMINATION_LIST_SIZE = sizeof(TERMINATION_LIST) / sizeof(char *);
+
+
+
+ATResponse response = {
     .Buff = (uint8_t *)tokenizerBuffer,
     .Size = sizeof(tokenizerBuffer),
 };
-static ATResponse comulative = {
+ATResponse comulative = {
     .Buff = (uint8_t *)comulativeBuffer,
     .Size = sizeof(comulativeBuffer),
 };
@@ -49,8 +54,6 @@ static void initCommandMode()
     comulative.Buff[0] = '\0';
     comulative.Len = 0;
 }
-
-
 
 bool parser_scanf(const char* format, ...) {
     char *bf = (char* )comulative.Buff;
@@ -84,7 +87,9 @@ bool parser_scanf(const char* format, ...) {
 
 
 void parser_setOnCommandFinish(cb_onCommandFinish cb, void *args)
-{
+{   if(parser_isBusy()){
+        return;
+    }
     obj.cb = cb;
     obj.args = args;
 }
@@ -106,7 +111,7 @@ uint8_t* parser_getComuBuffer(){
 }
 bool parser_sendCommand_dataMode(const char *cmd, const char *data, uint32_t timeout)
 {
-    if (parser_isOnCommand())
+    if (parser_isBusy())
     {
         return false;
     }
@@ -132,14 +137,28 @@ bool parser_sendCommand_dataMode(const char *cmd, const char *data, uint32_t tim
     OStream_writeStr(&obj.stream->Output, data);
     OStream_writeChar(&obj.stream->Output, 0x1a);
     OStream_flush(&obj.stream->Output);
-    obj.Ignorebytes =  strlen(data);
-
+    #if IGNORE_DATA_ECHO 
+        obj.Ignorebytes =  strlen(data);
+    #endif
     return true;
+}
+bool parser_sendCommand_dataMode_f(const char *data, uint32_t timeout,const char *format,...){
+    if (parser_isBusy())
+    {
+        return false;
+    }
+    va_list args;
+    va_start(args, format);
+    int written_chars = vsnprintf(comulative.Buff,comulative.Size,format,args);
+    va_end(args);
+    OStream_writeStr(&obj.stream->Output, comulative.Buff);
+    return parser_sendCommand_dataMode("",data,timeout);
+
 }
 
 bool parser_sendCommand(const char *cmd, uint32_t timeout)
 {
-    if (parser_isOnCommand())
+    if (parser_isBusy())
     {
         return false;
     }
@@ -151,6 +170,20 @@ bool parser_sendCommand(const char *cmd, uint32_t timeout)
     obj.rxState = Parser_RxState_inRec;
     return true;
 }
+bool parser_sendCommand_f(uint32_t timeout,const char* format,...)
+{
+    if (parser_isBusy())
+    {
+        return false;
+    }
+    va_list args;
+    va_start(args, format);
+    int written_chars = vsnprintf(comulative.Buff,comulative.Size,format,args);
+    va_end(args);
+    OStream_writeStr(&obj.stream->Output, comulative.Buff);
+    return parser_sendCommand("",timeout);
+}
+
 
 Stream_LenType ATResponse_Tokenizer(IStream *stream, ATResponse *response)
 {
@@ -238,7 +271,7 @@ Stream_LenType ATResponse_Tokenizer(IStream *stream, ATResponse *response)
         }
         else
         {
-            if ((index = IStream_findPatternAt(stream, response->PendingBytes, CRLF, sizeof(CRLF))) >= 0)
+            if ((index = IStream_findPatternAt(stream, response->PendingBytes, CRLF, sizeof(CRLF)-1)) >= 0)
             {
                 index += 2;
                 IStream_readBytes(stream, &response->Buff[response->Len], index);
@@ -253,7 +286,7 @@ Stream_LenType ATResponse_Tokenizer(IStream *stream, ATResponse *response)
     return 0;
 }
 
-bool parser_isOnCommand()
+bool parser_isBusy()
 {
     if (obj.txState == Parser_TxState_None && obj.rxState == Parser_RxState_None)
     {
@@ -262,15 +295,15 @@ bool parser_isOnCommand()
     return true;
 }
 
-bool parser_isBusy()
-{
-    if (!parser_isOnCommand() &&
-        response.InReceive == 0 && IStream_available(&obj.stream->Input) == 0)
-    {
-        return false;
-    }
-    return true;
-}
+// bool parser_isBusy_real()
+// {
+//     if (!parser_isBusy() &&
+//         response.InReceive == 0 && IStream_available(&obj.stream->Input) == 0)
+//     {
+//         return false;
+//     }
+//     return true;
+// }
 int check_termination(const uint8_t *data, int *index)
 {
     for (int i = 0; i < TERMINATION_LIST_SIZE; i++)
@@ -306,14 +339,15 @@ static void recv_handle()
     {
         if (parser_checkUrc())
         {
-            printf("urc:");
-            print_norm(response.Buff, response.Len);
-            printf("\n");
+            _print("urc: ");
+            _print_arr_norm(response.Buff, response.Len);
+            _print_no_prefix("\n");
         }
-        else if (parser_isOnCommand())
+        else if (parser_isBusy())
         {
-            print_norm(response.Buff, response.Len);
-            printf("\n");
+            _print("busy: ");
+            _print_arr_norm(response.Buff, response.Len);
+            _print_no_prefix("\n");
             if (comulative.Size - comulative.Len - 1 >= len)
             {
                 strcat(comulative.Buff, response.Buff);
@@ -345,7 +379,7 @@ static void recv_handle()
     }
     else
     {
-        if (parser_isOnCommand())
+        if (parser_isBusy())
         {
             // check timeout
             if (millis() - obj.millis >= obj.timeout)
@@ -373,3 +407,4 @@ void parser_handle()
         recv_handle();
     }
 }
+
