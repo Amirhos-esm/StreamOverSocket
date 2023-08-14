@@ -13,7 +13,7 @@ extern "C"{
 #include "parser_urc.h"
 
 #define IGNORE_DATA_ECHO 0
-#define PARSER_DEBUG_ENABLE 1
+#define PARSER_DEBUG_ENABLE 0
 
 typedef enum {
   Parser_TxState_None,

@@ -16,13 +16,13 @@ extern "C"
 #include "arduino.h"
 #include "../at_parser/parser.h"
 
-typedef struct 
-{
-    void* parent; // to at Socket
-    IStream Input;
-    OStream Output;
+// typedef struct 
+// {
+//     void* parent; // to at Socket
+//     IStream Input;
+//     OStream Output;
     
-} Socket_Stream;
+// } Socket_Stream;
 
 typedef enum{
     Socket_idle=0 ,
@@ -47,6 +47,7 @@ typedef struct {
     uint32_t acked;
     uint32_t notAcked;
     uint32_t millis;
+    uint32_t lastAckedTime;
     uint8_t checkNeeded : 1;  
     uint8_t timerIndex : 7;  
 } Ack_Data;
@@ -58,20 +59,20 @@ typedef struct{
     cb_socket_def onConnect;
     cb_socket_error onConnectError;
     cb_socket_def onClosed;
-    cb_socket_def onSendAcked;
+    cb_socket_def onSendTimeout; // timeout , socket close automatily
     cb_socket_def onSend; // send into tcp buffer not actuly received by server
-    cb_socket_error onSendError;
+    cb_socket_error onSendError; // send into tcp buffer error
     cb_socket_data onData;
-    cb_socket_def onTimeout;
-    cb_socket_error onError;
+    cb_socket_def onTimeout; // at_parser timeout
+    cb_socket_error onError; 
 }Socket_callbacks;
 typedef struct
 {
     void *args;
-    Socket_Stream stream;
+    // Socket_Stream stream;
     uint8_t sock_id;
     Socket_State state;
-    uint32_t millis;
+    // uint32_t millis;
     Ack_Data ackData;
     char domain[64];
     uint16_t port;
@@ -89,6 +90,8 @@ bool ec200_sock_close(AT_Socket *sock);
 bool ec200_sock_connect(AT_Socket *sock, const char *domain, uint16_t port);
 bool ec200_sock_send(AT_Socket *sock, Str str);
 bool ec200_sock_send_f(AT_Socket *sock,const char *format,...);
+bool ec200_sock_isConnected(AT_Socket *sock);
+
 
 #if MAX_SOCKET == 0
     #error "MAX_SOCKET can`t be 0"

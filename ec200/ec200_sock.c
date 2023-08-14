@@ -4,7 +4,7 @@
 #if INCLUDE_NET
 
 static const uint16_t checkSendIntervals[] = {
-     250, 500, 1000, 2000};
+     500, 1000, 1000, 2000};
 static const uint8_t checkSendIntervalsSize = sizeof(checkSendIntervals) / sizeof(uint16_t);
 
 #define _Fire_(SOCK, NAME, ...)            \
@@ -14,7 +14,7 @@ static const uint8_t checkSendIntervalsSize = sizeof(checkSendIntervals) / sizeo
     }                                      \
     else                                   \
     {                                      \
-        _print("onCb: " #NAME "\n");     \
+        _print("onCb(%d): " #NAME "\n",sock->sock_id);     \
     }
 
 AT_Socket sockets[MAX_SOCKET] = {
@@ -51,6 +51,7 @@ static void onResponse(void *args)
             sock->rxStatus = Socket_Rx_none;
             if (rCode == Parser_Ok)
             {
+                memset(&sock->ackData,0,sizeof(sock->ackData));
                 parser_setOnCommandFinish(onResponse, sock);
                 if (parser_sendCommand_f(5000, "AT+QIOPEN=1,%d,\"TCP\",\"%s\",%d,0,1\r\n", sock->sock_id, sock->domain, sock->port))
                 {
@@ -90,7 +91,7 @@ static void onResponse(void *args)
         break;
     case Socket_connected:
         /* code */
-        if (sock->rxStatus == Socket_Rx_sending)
+        if (sock->rxStatus == Socket_Rx_sending) //respose of at+qisend
         {
             sock->rxStatus = Socket_Rx_none;
             // sock->millis = millis();
@@ -109,19 +110,29 @@ static void onResponse(void *args)
             }
             //     sock->rxStatus = Socket_Rx_none;
         }
-        else if (sock->rxStatus == Socket_Rx_connected_ackcheck)
+        else if (sock->rxStatus == Socket_Rx_connected_ackcheck) // respose of at+qisend=x,0
         {
             sock->rxStatus = Socket_Rx_none;
             if (rCode == Parser_Ok)
             {
 
-                if (parser_scanf("+QISEND: %d,%d,%d", &sock->ackData.totalSend, &sock->ackData.acked, &sock->ackData.notAcked))
+                int notAcked;
+                if (parser_scanf("+QISEND: %d,%d,%d", &sock->ackData.totalSend, &sock->ackData.acked, &notAcked))
                 {
-                    if (sock->ackData.notAcked == 0)
+                    if (notAcked == 0)
                     {
                         sock->ackData.checkNeeded = false;
-                        _Fire_(sock, onSendAcked, sock);
+                        // _Fire_(sock, onSendAcked, sock);
                     }
+                    else if(sock->ackData.notAcked != notAcked){
+                        sock->ackData.lastAckedTime = millis();
+                    }
+                    else if(sock->ackData.notAcked == notAcked && millis() - sock->ackData.lastAckedTime > 10000){ // tcp send timeout 10s
+                        _Fire_(sock, onSendTimeout, sock);
+                        ec200_sock_close(sock);
+
+                    }
+                    sock->ackData.notAcked = notAcked;
                 }
             }
             //     sock->rxStatus = Socket_Rx_none;
@@ -161,7 +172,7 @@ static bool ack_send_check(AT_Socket *sock)
     if (sock->ackData.checkNeeded &&
         millis() - sock->ackData.millis > checkSendIntervals[sock->ackData.timerIndex])
     {
-        // printf("ack check in %d\n",checkSendIntervals[sock->ackData.timerIndex]);
+        _print("ack ckeck(%d): after %dms\n",sock->sock_id,checkSendIntervals[sock->ackData.timerIndex]);
         sock->ackData.millis = millis();
         sock->ackData.timerIndex++;
         if(sock->ackData.timerIndex >=checkSendIntervalsSize){
@@ -296,6 +307,9 @@ bool ec200_sock_send(AT_Socket *sock, Str str)
         parser_setOnCommandFinish(NULL, NULL);
         return false;
     }
+}
+bool ec200_sock_isConnected(AT_Socket *sock){
+    return sock->state == Socket_connected;
 }
 bool ec200_sock_send_f(AT_Socket *sock,const char *format,...){
      if (parser_isBusy())

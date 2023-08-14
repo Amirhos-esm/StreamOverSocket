@@ -11,7 +11,7 @@ uint8_t rxBuf1[1024];
 uint8_t txBuf1[1024];
 UARTStream uart1;
 
-AT_Socket *sock;
+AT_Socket *sock1,*sock2;
 
 void onConnectError(void* args,int error,const char* error_str){
     printf("error: %d %s\r\n",error,error_str);
@@ -41,20 +41,38 @@ void setup()
     IStream_receive(&uart1.Input);
     // IStream_receiveBytes(&uart1.Input, STR("\r\n+SSS: hello world\r\n\r\nOK\r\n\r\n+COPS: hello\r\n\r\n"));
     ec200_init(&uart1);  
-    sock = ec200_sock_get(0);
-    ec200_sock_init(sock,callbacks); 
-    ec200_sock_connect(sock,"80.253.141.222",10000);
+    sock1 = ec200_sock_get(0);
+    sock2 = ec200_sock_get(1);
+    ec200_sock_init(sock1,callbacks); 
+    ec200_sock_connect(sock1,"80.253.141.222",10000);
+    while(parser_isBusy()){
+        ec200_handle();
+    }
+
+    ec200_sock_init(sock2,callbacks); 
+    ec200_sock_connect(sock2,"80.253.141.222",10000);
 }
 
-uint32_t _millis;
+uint32_t _millis,_millis2;
 void loop()
 {
     ec200_handle();
-    delay(1);
-    if(millis() - _millis >2000 && sock->ackData.notAcked == 0){
-        static int i;
-        _millis = millis();
-        ec200_sock_send_f(sock,"hello world %d\r\n",i++);
+    if(!parser_isBusy()) {
+        if (millis() - _millis > 200 && sock1->ackData.notAcked == 0) {
+            static int i;
+            ec200_sock_send_f(sock1, "hello world from sock 1.counter= %d\r\n", millis() - _millis);
+            _millis = millis();
+        }
+        if (millis() - _millis2 > 10000) {
+            static int x;
+            _millis2 = millis();
+
+            if (ec200_sock_isConnected(sock2)) {
+                ec200_sock_send_f(sock2, "hello world from sock 2.counter= %d\r\n", x++);
+            } else {
+                ec200_sock_connect(sock2, "80.253.141.222", 10000);
+            }
+        }
     }
     
 }
