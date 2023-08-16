@@ -25,3 +25,9 @@
 0	31	0	clean	f0819b41ab4c6e17
 6	122	7138694432945086	CMakeFiles/serialPort.dir/userCodes.c.obj	a9a7f35f662440a2
 123	277	7138694434441410	serialPort.exe	81bdfab6f25d08a0
+21	145	7138698941478798	CMakeFiles/serialPort.dir/at_parser/parser_urc.c.obj	1c513f2f834f6aba
+14	160	7138698941638417	CMakeFiles/serialPort.dir/userCodes.c.obj	a9a7f35f662440a2
+34	177	7138698941817937	CMakeFiles/serialPort.dir/ec200/ec200.c.obj	3d629da8742a9c13
+7	181	7138698941867812	CMakeFiles/serialPort.dir/at_parser/parser.c.obj	e4ba9a3c283cf226
+7	140	7138700082831594	CMakeFiles/serialPort.dir/ec200/ec200_sock.c.obj	162434b5135c1c62
+141	316	7138700084531967	serialPort.exe	81bdfab6f25d08a0

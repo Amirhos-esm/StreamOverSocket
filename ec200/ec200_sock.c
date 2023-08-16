@@ -297,7 +297,7 @@ bool ec200_sock_send(AT_Socket *sock, Str str)
         return false;
     }
     parser_setOnCommandFinish(onResponse, sock);
-    if (parser_sendCommand_dataMode_f(str.Text, 2200, "AT+QISEND=%d,%d\r\n", sock->sock_id, str.Len))
+    if (parser_sendCommand_dataMode_f(str, 2200, "AT+QISEND=%d,%d\r\n", sock->sock_id, str.Len))
     {
         sock->rxStatus = Socket_Rx_sending;
         // sock->millis = millis();
@@ -331,7 +331,10 @@ bool ec200_sock_send_f(AT_Socket *sock,const char *format,...){
     int written_chars = vsnprintf(b,sizeof(b),format,args);
     va_end(args);
     parser_setOnCommandFinish(onResponse, sock);
-    if (parser_sendCommand_dataMode_f(b, 2200, "AT+QISEND=%d,%d\r\n", sock->sock_id, strlen(b)))
+    if (parser_sendCommand_dataMode_f((Str){
+        b
+        , strlen(b)
+        }, 2200, "AT+QISEND=%d,%d\r\n", sock->sock_id, strlen(b)))
     {
         sock->rxStatus = Socket_Rx_sending;
         // sock->millis = millis();

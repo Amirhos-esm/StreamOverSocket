@@ -109,7 +109,7 @@ int parser_getRetCode(){
 uint8_t* parser_getComuBuffer(){
     return comulative.Buff;
 }
-bool parser_sendCommand_dataMode(const char *cmd, const char *data, uint32_t timeout)
+bool parser_sendCommand_dataMode(const char *cmd, Str str, uint32_t timeout)
 {
     if (parser_isBusy())
     {
@@ -134,15 +134,15 @@ bool parser_sendCommand_dataMode(const char *cmd, const char *data, uint32_t tim
     // > is recevided now
     obj.timeout = timeout;
     obj.millis = millis();
-    OStream_writeStr(&obj.stream->Output, data);
+    OStream_writeBytes(&obj.stream->Output, str.Text,str.Len);
     OStream_writeChar(&obj.stream->Output, 0x1a);
     OStream_flush(&obj.stream->Output);
     #if IGNORE_DATA_ECHO 
-        obj.Ignorebytes =  strlen(data);
+        obj.Ignorebytes =  str.Len;
     #endif
     return true;
 }
-bool parser_sendCommand_dataMode_f(const char *data, uint32_t timeout,const char *format,...){
+bool parser_sendCommand_dataMode_f(Str str, uint32_t timeout,const char *format,...){
     if (parser_isBusy())
     {
         return false;
@@ -152,7 +152,7 @@ bool parser_sendCommand_dataMode_f(const char *data, uint32_t timeout,const char
     int written_chars = vsnprintf(comulative.Buff,comulative.Size,format,args);
     va_end(args);
     OStream_writeStr(&obj.stream->Output, comulative.Buff);
-    return parser_sendCommand_dataMode("",data,timeout);
+    return parser_sendCommand_dataMode("",str,timeout);
 
 }
 
