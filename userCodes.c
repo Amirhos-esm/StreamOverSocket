@@ -20,9 +20,16 @@ void onConnectError(void* args,int error,const char* error_str){
     ec200_sock_close(socket);
 
 }
+void onData(void* args,Str str){
+    print_arr_norm(str.Text,str.Len);
+    print_f("\n");
+}
 Socket_callbacks callbacks = {
-    .onConnectError = onConnectError 
+    .onConnectError = onConnectError ,
+    .onData = onData 
 };
+uint8_t data[250];
+
 void setup()
 {
     setbuf(stdout, NULL); // Disable buffering for stdout
@@ -51,16 +58,21 @@ void setup()
 
     ec200_sock_init(sock2,callbacks); 
     ec200_sock_connect(sock2,"80.253.141.222",10000);
-}
 
+//    memset(data,'a',sizeof(data));
+}
 uint32_t _millis,_millis2;
 void loop()
 {
     ec200_handle();
     if(!parser_isBusy()) {
-        if (millis() - _millis > 200 && sock1->ackData.notAcked == 0) {
+        if (millis() - _millis > 250 && sock1->ackData.notAcked == 0) {
             static int i;
-            ec200_sock_send_f(sock1, "hello world from sock 1.counter= %d\r\n", millis() - _millis);
+//            ec200_sock_send_f(sock1, "this is a test data it should have at list= %d\r\n", millis() - _millis);
+            ec200_sock_send(sock1, (Str){
+                .Text = data,
+                .Len = 250
+            });
             _millis = millis();
         }
         if (millis() - _millis2 > 10000) {

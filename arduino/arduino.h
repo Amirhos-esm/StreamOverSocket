@@ -5,7 +5,7 @@
 #include "stdarg.h"
 
 #define STR(X) X, strlen(X)
-#define STR_C(X) X, sizeof(X)
+#define STR_C(X) X, sizeof(X)-1
 
 void delay(uint32_t time);
 uint32_t millis();
