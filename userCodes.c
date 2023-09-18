@@ -26,15 +26,8 @@ void setup()
     }
 
 
-    OStream_flush(&uart1.Output);
     IStream_receive(&uart1.Input);
-    // IStream_receiveBytes(&uart1.Input, STR("\r\n+SSS: hello world\r\n\r\nOK\r\n\r\n+COPS: hello\r\n\r\n"));
-
-//
-//    ec200_sock_init(sock2,callbacks);
-//    ec200_sock_connect(sock2,"80.253.141.222",10000);
-
-//    memset(data,'a',sizeof(data));
+    
 }
 void loop()
 {
