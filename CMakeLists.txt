@@ -7,8 +7,6 @@ set(SOURCES
         main.c
         uart_sock.c
         userCodes.c
-        at_parser/parser.c
-        at_parser/parser_urc.c
         Str/Str.c
         Stream/StreamBuffer.c
         Stream/UARTStream.c
@@ -16,8 +14,6 @@ set(SOURCES
         Stream/OutputStream.c
         Stream/InputStream.c
         arduino/arduino.c
-        ec200/ec200.c
-        ec200/ec200_sock.c
         )
 
 #target_include_directories(${PROJECT_NAME} PRIVATE ${ROOT_DIR} ${ROOT_DIR}/Stream ${ROOT_DIR}/Str)

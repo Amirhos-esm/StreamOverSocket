@@ -1,7 +1,6 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <winsock2.h>
-#include <process.h>
+#include <pthread.h>
 #include "stdint.h"
 #include <windows.h>
 
@@ -10,10 +9,10 @@
 
 void setup();
 void loop();
-void onEnd();
 
 
-unsigned __stdcall LoopThread(void *data)
+
+void* LoopThread(void *args)
 {
     int sleepIndexer=0;
     while (1)
@@ -27,8 +26,7 @@ unsigned __stdcall LoopThread(void *data)
             Sleep(1);
         }
     }
-
-    return 0;
+    pthread_exit(NULL);
 }
 
 
@@ -36,30 +34,27 @@ int main()
 {
     WSADATA wsa;
 
-    printf("Initializing Winsock...\n");
+//    printf("Initializing Winsock...\n");
     if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
     {
-        printf("Failed. Error Code: %d", WSAGetLastError());
-        return 1;
+        printf("Initializing Winsock Failed. Error Code: %d\n", WSAGetLastError());
+        return 0;
     }
 
-    printf("Initialized.\n");
+//    printf("Initialized.\n");
     setup();
 
 
-    HANDLE hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)LoopThread, NULL, 0, NULL);
-    if (hThread == NULL)
-    {
-        puts("Failed to create Loop thread\n");
-        return 1;
+    pthread_t loopThread;
+
+    // Create producer and consumer threads
+    int ret =pthread_create(&loopThread, NULL, LoopThread, NULL);
+    if(ret != 0){
+        printf("create loopThread Failed. Error Code: %d\n",ret);
     }
-
-    // Wait for the thread to exit (optional)
-    WaitForSingleObject(hThread, INFINITE);
-
-
-
-    onEnd();
+    else {
+        pthread_join(loopThread, NULL);
+    }
     // Close the socket
     // closesocket(s);
     WSACleanup();

@@ -3,143 +3,129 @@
 #include "stdint.h"
 #include "stdio.h"
 #include "stdlib.h"
+#include <pthread.h>
+
 // bool dumpData = false;
-typedef struct
-{
+typedef struct {
     SOCKET sock;
     struct sockaddr_in server;
-    HANDLE recThread;
-    HANDLE sendThread;
     volatile bool isRunnig;
     const char *name;
-    volatile uint8_t *txBuffer;
-    volatile uint8_t *rxBuffer;
-    volatile size_t inTx;
-    volatile size_t inRx;
+
+    pthread_t sendThread;
+    void *txBuffer;
+    pthread_cond_t txCond;
+    pthread_mutex_t txMutex;
+    size_t inTx;
     void (*txComp)(void *);
+
+
+    pthread_t recThread;
+    uint8_t *rxBuffer;
+    pthread_cond_t rxCond;
+    pthread_mutex_t rxMutex;
+    size_t inRx;
     void (*rxComp)(void *);
+
+
+
     void *args;
 } UARTStreamOverSocket;
 
-unsigned __stdcall SendThread(void *data)
-{
-    UARTStreamOverSocket *stream = (UARTStreamOverSocket *)data;
+void *SendThread(void *args) {
+    UARTStreamOverSocket *stream = (UARTStreamOverSocket *) args;
     SOCKET s = stream->sock;
-    while (1)
-    {
-        if (stream->inTx != 0)
-        {
-            int sent = 0;
-            if ((sent = send(s, stream->txBuffer, stream->inTx, 0)) < 0)
-            {
-                printf("%s->Send failed\n", stream->name);
-                break;
-            }
-            // stream->inTx  -= sent;
-            stream->inTx = 0;
-            if (stream->txComp != NULL)
-            {
-                stream->txComp(stream->args);
-            }
+    while (1) {
+        pthread_mutex_lock(&stream->txMutex);
+        while (stream->inTx == 0) {
+            pthread_cond_wait(&stream->txCond, &stream->txMutex);
         }
+        while (stream->inTx != 0) {
+            int sent = send(s, stream->txBuffer, stream->inTx, 0);
+            if (send < 0) {
+                printf("%s->Send Failed.Error Code: %d .Exiting...\n", stream->name, sent);
+                exit(0);
+            }
+            stream->inTx -= sent;
+            stream->txBuffer += sent;
+        }
+        pthread_mutex_unlock(&stream->txMutex);
 
-        if (!stream->isRunnig)
-            break;
-        Sleep(1);
+        if (stream->txComp != NULL) {
+            stream->txComp(stream->args);
+        }
     }
-    printf("exit on line: %d",  __LINE__);
-    exit(0);
-    return 0;
 }
 
 // Function executed by the receiving thread
-unsigned __stdcall ReceiveThread(void *data)
-{
-    UARTStreamOverSocket *stream = (UARTStreamOverSocket *)data;
-    SOCKET s = stream->sock;
-    char server_reply[1024];
+void *ReceiveThread(void *args) {
+    UARTStreamOverSocket *stream = (UARTStreamOverSocket *) args;
+    SOCKET socket = stream->sock;
     int recv_size;
-    stream->isRunnig = true;
 
-    // while ((recv_size = recv(s, server_reply, sizeof(server_reply) - 1, 0)) > 0)
-    // {
-    //     // server_reply[recv_size] = '\0';
-    //     // if (dumpData)
-    //     // {
-    //     //     printf("\n%s->rec:\"", stream->name);
-    //     //     printf(server_reply);
-    //     //     printf("\"");
-    //     // }
-    //     if (stream->inRx != 0)
-    //     {
-    //         printf("rec:%d %d\n",recv_size,stream->inRx);
-    //         memcpy(stream->rxBuffer, server_reply, recv_size);
-    //         stream->inRx -= recv_size;
-    //         stream->rxBuffer = &stream->rxBuffer[recv_size];
-    //         if (stream->inRx == 0)
-    //         {
-    //             if (stream->rxComp != NULL)
-    //             {
-    //                 stream->rxComp(stream->args);
-    //             }
-    //         }
-    //     }
-    // }
-    while (1)
-    {
-        if (stream->inRx != 0)
-        {
-            if ((recv_size = recv(s, stream->rxBuffer, stream->inRx, 0)) > 0)
-                {
-                    stream->inRx -= recv_size;
-                    stream->rxBuffer = &stream->rxBuffer[recv_size];
-                    if (stream->inRx == 0)
-                    {
-                        if (stream->rxComp != NULL)
-                        {
-                            stream->rxComp(stream->args);
-                        }
-                    }
-                }
-            if (recv_size == 0)
-            {
-                printf("%s->Server disconnected\n", stream->name);
-                stream->isRunnig = false;
+    while (1) {
+        pthread_mutex_lock(&stream->rxMutex);
+        while (stream->inRx == 0) {
+            pthread_cond_wait(&stream->rxCond, &stream->rxMutex);
+        }
+        while(stream->inRx != 0) {
+            recv_size = recv(socket, (char *) stream->rxBuffer, stream->inRx, 0);
+            if (recv_size > 0) {
+                stream->inRx -= recv_size;
+                stream->rxBuffer += recv_size;
+            }
+            else {
+                printf("%s->disconnected.Exiting...\n", stream->name);
+                exit(0);
                 break;
             }
         }
-        else
-        {
-            Sleep(1);
-        }
-    }
-   printf("exit on line: %d",  __LINE__);
-    exit(0);
+        pthread_mutex_unlock(&stream->rxMutex);
 
-    return 0;
+        if (stream->rxComp != NULL) {
+            stream->rxComp(stream->args);
+        }
+
+    }
 }
+
 size_t socketinReceive(void *obj)
 {
     UARTStreamOverSocket *stream = (UARTStreamOverSocket *)obj;
     return stream->inRx;
 }
-void socketReceive(void *obj, uint8_t *buffer, size_t len)
-{
-    UARTStreamOverSocket *stream = (UARTStreamOverSocket *)obj;
+
+void socketReceive(void *obj, uint8_t *buffer, size_t len) {
+    UARTStreamOverSocket *stream = (UARTStreamOverSocket *) obj;
+    pthread_mutex_lock(&stream->rxMutex);
+
+    // Set the data and signal the sending thread
+
     stream->rxBuffer = buffer;
     stream->inRx = len;
+
+    pthread_cond_signal(&stream->rxCond);
+    pthread_mutex_unlock(&stream->rxMutex);
 }
-void socketTransmit(void *obj, uint8_t *buffer, size_t len)
-{
-    UARTStreamOverSocket *stream = (UARTStreamOverSocket *)obj;
+
+void socketTransmit(void *obj, uint8_t *buffer, size_t len) {
+    UARTStreamOverSocket *stream = (UARTStreamOverSocket *) obj;
+    pthread_mutex_lock(&stream->txMutex);
+
+    // Set the data and signal the sending thread
+
     stream->txBuffer = buffer;
     stream->inTx = len;
+
+    pthread_cond_signal(&stream->txCond);
+    pthread_mutex_unlock(&stream->txMutex);
+
 }
-void *socketInit(void *args, const char *ip, uint16_t port, const char *name, void (*txComp)(void *), void (*rxComp)(void *))
-{
+
+void *socketInit(void *args, const char *ip, uint16_t port, const char *name, void (*txComp)(void *),
+                 void (*rxComp)(void *)) {
     UARTStreamOverSocket *stream = malloc(sizeof(UARTStreamOverSocket));
-    if (stream == NULL)
-    {
+    if (stream == NULL) {
         printf("%s->cannot alloc memory\n", name);
         return NULL;
     }
@@ -151,43 +137,48 @@ void *socketInit(void *args, const char *ip, uint16_t port, const char *name, vo
     stream->args = args;
     stream->inTx = stream->inRx = 0;
     // Create a socket
-    if ((stream->sock = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
-    {
+    if ((stream->sock = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET) {
         printf("%s->Could not create socket : %d\n", stream->name, WSAGetLastError());
         return NULL;
     }
-    printf("%s->Socket created.\n", stream->name);
+//    printf("%s->Socket created.\n", stream->name);
 
     stream->server.sin_addr.s_addr = inet_addr(ip); // Replace with the IP address of your server
     stream->server.sin_family = AF_INET;
     stream->server.sin_port = htons(port); // Replace with the port number of your server
 
     // Connect to remote server
-    if (connect(stream->sock, (struct sockaddr *)&stream->server, sizeof(stream->server)) < 0)
-    {
+    if (connect(stream->sock, (struct sockaddr *) &stream->server, sizeof(stream->server)) < 0) {
         printf("%s->Connect error\n", stream->name);
         return NULL;
     }
 
     printf("%s->Connected\n", stream->name);
 
-    stream->recThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)ReceiveThread, stream, 0, NULL);
-    if (stream->recThread == (HANDLE)NULL)
-    {
-        printf("%s->Failed to create thread\n", stream->name);
+    stream->rxCond = PTHREAD_COND_INITIALIZER;
+    stream->rxMutex = PTHREAD_MUTEX_INITIALIZER;
+    int ret = pthread_create(&stream->recThread, NULL, ReceiveThread, stream);
+    if (ret != 0) {
+        printf("%s->Failed to create ReceiveThread.Error Code: %d\n", stream->name, ret);
+        return NULL;
+    }
+
+    stream->txCond = PTHREAD_COND_INITIALIZER;
+    stream->txMutex = PTHREAD_MUTEX_INITIALIZER;
+    ret = pthread_create(&stream->sendThread, NULL, SendThread, stream);
+    if (ret != 0) {
+        printf("%s->Failed to create SendThread.Error Code: %d\n", stream->name, ret);
+        pthread_cancel(stream->recThread);
+        // Wait for the created thread to finish (note that it may not terminate immediately)
+        pthread_join(stream->recThread, NULL);
         return NULL;
     }
     Sleep(1);
-    stream->sendThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)SendThread, stream, 0, NULL);
-    if (stream->sendThread == (HANDLE)NULL)
-    {
-        printf("%s->Failed to create thread\n", stream->name);
-        return NULL;
-    }
+    stream->isRunnig = true;
     return stream;
 }
-void socketDeInit(void *obj)
-{
-    closesocket(((UARTStreamOverSocket *)obj)->sock);
+
+void socketDeInit(void *obj) {
+    closesocket(((UARTStreamOverSocket *) obj)->sock);
     free(obj);
 }

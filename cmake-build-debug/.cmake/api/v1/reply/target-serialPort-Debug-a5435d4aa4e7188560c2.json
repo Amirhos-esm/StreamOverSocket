@@ -29,19 +29,19 @@
 			{
 				"command" : 0,
 				"file" : 0,
-				"line" : 25,
+				"line" : 21,
 				"parent" : 0
 			},
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 28,
+				"line" : 24,
 				"parent" : 0
 			},
 			{
 				"command" : 2,
 				"file" : 0,
-				"line" : 24,
+				"line" : 20,
 				"parent" : 0
 			}
 		]
@@ -62,23 +62,23 @@
 			[
 				{
 					"backtrace" : 3,
-					"path" : "C:/Users/Administrator/CLionProjects/serialPort/parser"
+					"path" : "C:/Users/Administrator/Desktop/amirhos_esm/serialPort/parser"
 				},
 				{
 					"backtrace" : 3,
-					"path" : "C:/Users/Administrator/CLionProjects/serialPort/Str"
+					"path" : "C:/Users/Administrator/Desktop/amirhos_esm/serialPort/Str"
 				},
 				{
 					"backtrace" : 3,
-					"path" : "C:/Users/Administrator/CLionProjects/serialPort/Stream"
+					"path" : "C:/Users/Administrator/Desktop/amirhos_esm/serialPort/Stream"
 				},
 				{
 					"backtrace" : 3,
-					"path" : "C:/Users/Administrator/CLionProjects/serialPort/arduino"
+					"path" : "C:/Users/Administrator/Desktop/amirhos_esm/serialPort/arduino"
 				},
 				{
 					"backtrace" : 3,
-					"path" : "C:/Users/Administrator/CLionProjects/serialPort/ec200"
+					"path" : "C:/Users/Administrator/Desktop/amirhos_esm/serialPort/ec200"
 				}
 			],
 			"language" : "C",
@@ -101,11 +101,7 @@
 				6,
 				7,
 				8,
-				9,
-				10,
-				11,
-				12,
-				13
+				9
 			]
 		}
 	],
@@ -156,11 +152,7 @@
 				6,
 				7,
 				8,
-				9,
-				10,
-				11,
-				12,
-				13
+				9
 			]
 		}
 	],
@@ -182,18 +174,6 @@
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
 			"path" : "userCodes.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "at_parser/parser.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "at_parser/parser_urc.c",
 			"sourceGroupIndex" : 0
 		},
 		{
@@ -236,18 +216,6 @@
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
 			"path" : "arduino/arduino.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ec200/ec200.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ec200/ec200_sock.c",
 			"sourceGroupIndex" : 0
 		}
 	],
